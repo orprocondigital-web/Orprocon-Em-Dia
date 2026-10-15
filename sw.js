@@ -3,13 +3,13 @@
  * Guarda os arquivos do app (os dados ficam no localStorage do navegador, não aqui).
  * Mudou algum arquivo? Aumente VERSAO (e o ?v= do index.html), senão quem instalou continua com o antigo.
  */
-var VERSAO = "1.0.0";
+var VERSAO = "1.1.0";
 var CACHE = "em-dia-" + VERSAO;
 var CACHE_FONTES = "em-dia-fontes";
 var ARQUIVOS = [
   "./", "index.html", "manifest.webmanifest",
   "css/app.css?v=" + VERSAO, "css/em-dia.css?v=" + VERSAO,
-  "js/dados.js?v=" + VERSAO, "js/app.js?v=" + VERSAO,
+  "js/dados.js?v=" + VERSAO, "js/acesso.js?v=" + VERSAO, "js/app.js?v=" + VERSAO,
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png"
 ];
 

@@ -1,21 +1,25 @@
 /*
  * app.js — telas do Em Dia. As regras ficam em dados.js (EmDiaDados).
  *
- * Quem está usando (versão independente), nesta ordem:
- *   1. window.EM_DIA_USUARIO = {id, nome, email, perfil}  ← o seu sistema define antes de carregar o app.js
- *   2. localStorage "gf.sessao" (login da Gestão Financeira, se existir)
- *   3. localStorage "emDia:usuario" (criado pela tela "Quem é você?" na primeira vez)
+ * Quem está usando (versão independente):
+ *   1. window.EM_DIA_USUARIO = {id, nome, email, perfil}  ← se outro sistema definir antes de carregar o app.js
+ *   2. senão, a tela de entrada (acesso.js): modo de teste (dados de exemplo, separados) ou o seu acesso
+ *      (e-mail e senha criados na primeira vez; abre limpo).
  * perfil "admin" = gestor (vê o painel e cadastra clientes, etapas e equipe).
  *
  * Cada setor (Contábil, Fiscal, Pessoal/DP) tem o seu diário, na aba "Diários dos setores".
  *
- * FASE ATUAL (só front): os dados ficam neste navegador, na chave "emDia:v1" (vão no backup do sistema).
+ * Os dados ficam neste navegador: "emDiaApp:v1" (seu acesso) e "emDiaApp:teste:v1" (modo de teste).
  * Com o servidor, a equipe passa a ver os mesmos dados em todos os computadores.
  */
 (function () {
   "use strict";
-  var D = EmDiaDados;
-  var CHAVE = "emDia:v1", CHAVE_MES = "emDia:mes", CHAVE_ABA = "emDia:aba";
+  var D = EmDiaDados, A = EmDiaAcesso, K = A.CHAVES;
+  var sessaoApp = window.EM_DIA_USUARIO && window.EM_DIA_USUARIO.id ? { modo: "externo", usuario: window.EM_DIA_USUARIO } : A.sessaoAtual();
+  var modoTeste = !!sessaoApp && sessaoApp.modo === "teste";
+  var sufixo = modoTeste ? ":teste" : "";
+  var CHAVE = A.chaveDados(sessaoApp), CHAVE_MES = K.mes + sufixo, CHAVE_ABA = K.aba + sufixo, CHAVE_BACKUP = K.ultimoBackup + sufixo;
+  var testeNovo = modoTeste && (function () { try { return localStorage.getItem(CHAVE) === null; } catch (e) { return false; } })();
   var $ = function (id) { return document.getElementById(id); };
 
   // ---------------------------------------------------------------- utilidades
@@ -62,18 +66,14 @@
     if (ev.key === CHAVE) { estado = D.normalizar(lerJSON(CHAVE, null)); render(); }
   });
 
-  var sessao = lerJSON("gf.sessao", null);
-  var origemEu = window.EM_DIA_USUARIO && window.EM_DIA_USUARIO.id ? "externo" : sessao && sessao.usuarioId ? "gf" : "local";
-  var eu = origemEu === "externo" ? window.EM_DIA_USUARIO
-    : origemEu === "gf" ? { id: sessao.usuarioId, nome: sessao.nome, email: sessao.email, perfil: sessao.perfil }
-    : lerJSON("emDia:usuario", null);
+  var eu = sessaoApp ? sessaoApp.usuario : null;
   var gestor = !!eu && eu.perfil === "admin";
   var mes = localStorage.getItem(CHAVE_MES) || D.somarMes(D.mesDe(hoje()), -1);
   var aba = (function () { try { return new URLSearchParams(location.search).get("aba"); } catch (e) { return null; } })() || localStorage.getItem(CHAVE_ABA) || "hoje";
   var filtros = { busca: "", pessoa: "", setor: "", pendentes: false, modo: "quadro", status: "",
     diario: { setor: null, pessoa: "", clienteId: "", de: "", ate: "", texto: "" }, bastaoPessoa: "", clientesBusca: "" };
 
-  var VERSAO_APP = "1.0.0";
+  var VERSAO_APP = "1.1.0";
   // ícones de traço (24x24), desenhados com currentColor
   var ICONE = {
     hoje: '<path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/><circle cx="12" cy="12" r="4"/>',
@@ -153,7 +153,9 @@
     }).join("");
     var tela = { hoje: telaHoje, fechamento: telaFechamento, diario: telaDiario, bastao: telaBastao, painel: telaPainel,
       clientes: telaClientes, etapas: telaEtapas, equipe: telaEquipe, ajustes: telaAjustes }[aba];
-    $("tela").innerHTML = tela();
+    $("tela").innerHTML = (modoTeste ? '<div class="ed-faixa-teste" role="status"><span class="ac-selo">Modo de teste</span><span>Dados fictícios, separados dos seus. Pode mexer à vontade.</span>' +
+      '<span class="acoes">' + (gestor ? '<button type="button" class="btn btn-ghost btn-sm" data-acao="zerar-teste">Zerar teste</button>' : "") +
+      '<button type="button" class="btn btn-outline btn-sm" data-acao="sair">Sair do teste</button></span></div>' : "") + tela();
   }
 
   // ---------------------------------------------------------------- tema
@@ -162,8 +164,8 @@
     var escuro = t === "escuro" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
     document.documentElement.setAttribute("data-theme", escuro ? "dark" : "light");
   }
-  function temaSalvo() { try { return localStorage.getItem("emDia:tema") || "auto"; } catch (e) { return "auto"; } }
-  function definirTema(t) { try { localStorage.setItem("emDia:tema", t); } catch (e) {} aplicarTema(t); render(); }
+  function temaSalvo() { try { return localStorage.getItem(K.tema) || "auto"; } catch (e) { return "auto"; } }
+  function definirTema(t) { try { localStorage.setItem(K.tema, t); } catch (e) {} aplicarTema(t); render(); }
   if (window.matchMedia) {
     var mq = matchMedia("(prefers-color-scheme: dark)");
     var mudou = function () { if (temaSalvo() === "auto") { aplicarTema("auto"); render(); } };
@@ -181,7 +183,7 @@
 
   function telaAjustes() {
     var t = temaSalvo();
-    var ultimo = localStorage.getItem("emDia:ultimoBackup");
+    var ultimo = localStorage.getItem(CHAVE_BACKUP);
     var gestao = ABAS.filter(function (a) { return a.gestor; });
     var bloco = function (titulo, sub, corpo) {
       return '<section class="panel"><div class="panel-head"><h2>' + esc(titulo) + "</h2>" + (sub ? '<p class="muted small">' + sub + "</p>" : "") + '</div><div class="panel-body ed-ajuste">' + corpo + "</div></section>";
@@ -189,19 +191,22 @@
     var pessoas = pessoasOpcoes();
     var voce = '<div class="ed-ajuste-linha"><div class="ed-eu">' + avatar(eu.id) + "<div><strong>" + esc(eu.nome) + '</strong><span class="muted small">' + esc(eu.email || (gestor ? "Gestor" : "Equipe")) + "</span></div></div>" +
       '<div class="field"><label for="aj-setor">Meu setor</label><select id="aj-setor" data-acao-change="meu-setor">' + opcoes(D.SETORES, meuSetor(), "Nenhum") + "</select></div></div>" +
-      (origemEu === "local" && pessoas.length > 1 ? '<div class="ed-ajuste-linha"><div><strong>Entrar como outra pessoa</strong><p class="muted small">Para testar o app como outro membro da equipe neste aparelho.</p></div>' +
+      (modoTeste && pessoas.length > 1 ? '<div class="ed-ajuste-linha"><div><strong>Entrar como outra pessoa</strong><p class="muted small">No teste, veja o app como outro membro da equipe.</p></div>' +
         '<select data-acao-change="entrar-como" aria-label="Entrar como">' + opcoes(pessoas, eu.id) + "</select></div>" : "") +
-      (origemEu === "local" ? '<div class="ed-ajuste-linha"><div><strong>Trocar de pessoa</strong><p class="muted small">Volta para a tela "Quem é você?". Os dados continuam.</p></div><button type="button" class="btn btn-outline" data-acao="sair">Trocar</button></div>' : "");
+      (sessaoApp.modo !== "externo" ? '<div class="ed-ajuste-linha"><div><strong>Sair</strong><p class="muted small">' + (modoTeste ? "Sai do modo de teste. Os dados de teste ficam guardados para a próxima vez." : "Volta para a tela de entrada. Os seus dados continuam neste aparelho.") +
+        '</p></div><button type="button" class="btn btn-outline" data-acao="sair">Sair</button></div>' : "");
     var aparencia = '<div class="segmentado" role="group" aria-label="Tema">' + [["claro", "Claro"], ["escuro", "Escuro"], ["auto", "Automático"]].map(function (o) {
       return '<button type="button" data-acao="tema-set" data-tema="' + o[0] + '" class="' + (t === o[0] ? "ativo" : "") + '" aria-pressed="' + (t === o[0]) + '">' + o[1] + "</button>";
     }).join("") + '</div><p class="muted small" style="margin-top:8px">Automático segue o tema do computador ou do celular.</p>';
     var backupHtml = '<div class="ed-ajuste-linha"><div><strong>Baixar backup</strong><p class="muted small">Um arquivo .json com tudo: clientes, etapas, equipe, tarefas e diários.' +
       (ultimo ? " Último: " + esc(quandoCurto(ultimo)) + "." : " Nenhum backup baixado ainda.") + '</p></div><button type="button" class="btn btn-primary" data-acao="backup-baixar">Baixar backup</button></div>' +
       (gestor ? '<div class="ed-ajuste-linha"><div><strong>Restaurar backup</strong><p class="muted small">Troca os dados deste aparelho pelos do arquivo. Use para passar os dados para outro computador ou celular.</p></div><button type="button" class="btn btn-outline" data-acao="backup-restaurar">Escolher arquivo</button></div>' : "");
-    var teste = gestor ? '<div class="ed-ajuste-linha"><div><strong>Carregar dados de exemplo</strong><p class="muted small">8 clientes e 3 pessoas fictícias, com tarefas e diários, para ver o app funcionando.</p></div><button type="button" class="btn btn-outline" data-acao="exemplo">Carregar exemplo</button></div>' +
+    var teste = !gestor ? '<p class="muted">Só o gestor apaga os dados.</p>'
+      : !modoTeste ? '<div class="ed-ajuste-linha"><div><strong>Apagar tudo e começar do zero</strong><p class="muted small">Apaga clientes, tarefas, diários, ausências e equipe deste aparelho. Não dá para desfazer: baixe um backup antes.</p></div><button type="button" class="btn btn-danger-ghost" data-acao="apagar-tudo">Apagar tudo</button></div>'
+      : '<div class="ed-ajuste-linha"><div><strong>Zerar dados de teste</strong><p class="muted small">Apaga tudo do modo de teste e deixa vazio, para testar do zero. Os seus dados de verdade não são mexidos.</p></div><button type="button" class="btn btn-danger-ghost" data-acao="zerar-teste">Zerar teste</button></div>' +
+      '<div class="ed-ajuste-linha"><div><strong>Carregar dados de exemplo</strong><p class="muted small">8 clientes e 3 pessoas fictícias, com tarefas e diários, para ver o app funcionando.</p></div><button type="button" class="btn btn-outline" data-acao="exemplo">Carregar exemplo</button></div>' +
       (D.temExemplo(estado) ? '<div class="ed-ajuste-linha"><div><strong>Tirar só os dados de exemplo</strong><p class="muted small">O que vocês cadastraram continua.</p></div><button type="button" class="btn btn-outline" data-acao="limpar-exemplo">Tirar exemplo</button></div>' : "") +
-      '<div class="ed-ajuste-linha"><div><strong>Apagar tudo e começar do zero</strong><p class="muted small">Apaga clientes, tarefas, diários, ausências e equipe deste aparelho. Não dá para desfazer.</p></div><button type="button" class="btn btn-danger-ghost" data-acao="apagar-tudo">Apagar tudo</button></div>'
-      : '<p class="muted">Só o gestor carrega o exemplo ou apaga os dados.</p>';
+      "";
     var instalar = instalado() ? '<p>O Em Dia já está instalado neste aparelho.</p>'
       : pedidoInstalar ? '<div class="ed-ajuste-linha"><div><strong>Instalar o Em Dia</strong><p class="muted small">Abre numa janela própria, com ícone, e funciona sem internet.</p></div><button type="button" class="btn btn-primary" data-acao="instalar">Instalar</button></div>'
       : '<p class="muted small">No Chrome ou Edge do computador: ícone de instalar na barra de endereço. No Android: menu ⋮ → <b>Instalar app</b>. No iPhone (Safari): <b>Compartilhar → Adicionar à Tela de Início</b>.</p>';
@@ -212,7 +217,7 @@
       bloco("Você", "", voce) +
       bloco("Aparência", "", aparencia) +
       bloco("Backup", "Os dados ficam só neste aparelho. Baixe um backup de vez em quando e guarde num lugar seguro.", backupHtml) +
-      bloco("Dados de teste", "", teste) +
+      bloco(modoTeste ? "Dados de teste" : "Começar do zero", modoTeste ? "Você está no modo de teste: dados fictícios, separados dos seus." : "", teste) +
       bloco("Instalar como app", "", instalar) +
       '<p class="muted small ed-versao">Em Dia ' + VERSAO_APP + ". Os dados ficam no navegador deste aparelho (" + estado.clientes.length + " clientes, " + estado.diario.length + " registros no diário).</p></div>";
   }
@@ -224,7 +229,7 @@
     link.href = URL.createObjectURL(blob); link.download = "em-dia-backup-" + hoje() + ".json";
     document.body.appendChild(link); link.click(); link.remove();
     setTimeout(function () { URL.revokeObjectURL(link.href); }, 2000);
-    try { localStorage.setItem("emDia:ultimoBackup", new Date().toISOString()); } catch (e) {}
+    try { localStorage.setItem(CHAVE_BACKUP, new Date().toISOString()); } catch (e) {}
     toast("Backup baixado."); render();
   }
 
@@ -247,9 +252,9 @@
 
   function semClientes() {
     return '<div class="panel"><div class="ed-vazio"><strong>Nenhum cliente cadastrado ainda</strong>' +
-      (gestor ? 'Comece cadastrando os clientes, ou veja como fica com uma demonstração (dá para tirar depois em <b>Limpar dados</b>).<br>' +
+      (gestor ? (modoTeste ? 'Comece cadastrando os clientes, ou carregue a demonstração de novo.<br>' : 'Comece cadastrando os clientes do escritório e as etapas do fechamento.<br>') +
         '<button type="button" class="btn btn-primary" data-acao="ir-clientes">Cadastrar clientes</button> ' +
-        '<button type="button" class="btn btn-outline" data-acao="exemplo">Carregar dados de exemplo</button>'
+        (modoTeste ? '<button type="button" class="btn btn-outline" data-acao="exemplo">Carregar dados de exemplo</button>' : "")
         : "Peça ao gestor para cadastrar os clientes e as etapas do fechamento.") + "</div></div>";
   }
 
@@ -553,7 +558,7 @@
     var r = D.resumoMes(estado, mes, hoje()), prog = {};
     r.porCliente.forEach(function (p) { prog[p.cliente.id] = p; });
     return '<section class="panel"><div class="panel-head row"><div><h2>Clientes</h2><p class="muted small">Quem é responsável por cada área e quais etapas do fechamento valem para o cliente.</p></div>' +
-      '<div class="panel-actions">' + (estado.clientes.length ? "" : '<button type="button" class="btn btn-outline btn-sm" data-acao="exemplo">Dados de exemplo</button>') +
+      '<div class="panel-actions">' + (estado.clientes.length || !modoTeste ? "" : '<button type="button" class="btn btn-outline btn-sm" data-acao="exemplo">Dados de exemplo</button>') +
         '<button type="button" class="btn btn-primary btn-sm" data-acao="cliente">Novo cliente</button></div></div>' +
       '<div class="ed-filtros"><div class="field larga"><label for="c-busca">Buscar</label><input id="c-busca" type="search" data-filtro="clientesBusca" placeholder="Nome ou CNPJ…" value="' + esc(filtros.clientesBusca) + '"></div></div>' +
       (lista.length ? '<div class="table-wrap"><table class="ledger"><thead><tr><th>Cliente</th><th>Regime</th><th>Contábil</th><th>Fiscal</th><th>Pessoal (DP)</th><th>' + esc(D.rotuloMes(mes)) + '</th><th class="col-actions"></th></tr></thead><tbody>' +
@@ -869,9 +874,17 @@
     if (a === "backup-restaurar") { $("arquivo-backup").value = ""; $("arquivo-backup").click(); return; }
     if (a === "instalar") { if (pedidoInstalar) { pedidoInstalar.prompt(); pedidoInstalar.userChoice.then(function () { pedidoInstalar = null; render(); }); } return; }
     if (a === "sair") {
-      if (!confirm("Trocar de pessoa neste aparelho? Os dados continuam.")) return;
-      try { localStorage.removeItem("emDia:usuario"); } catch (e) {}
+      try { A.sair(); } catch (e) {}
       location.reload(); return;
+    }
+    if (a === "zerar-teste") {
+      if (!modoTeste) return;
+      if (!confirm("Zerar os dados de teste? Clientes, tarefas, diários e equipe do teste serão apagados.\n\nOs seus dados de verdade não são mexidos.")) return;
+      estado = D.estadoVazio(); D.registrarMembro(estado, eu); salvar(); fecharModal();
+      filtros.diario.setor = null; filtros.bastaoPessoa = ""; aba = "hoje";
+      try { localStorage.setItem(CHAVE_ABA, aba); localStorage.removeItem(CHAVE_MES); } catch (e) {}
+      mes = D.somarMes(D.mesDe(hoje()), -1);
+      toast("Dados de teste zerados."); render(); return;
     }
     if (a === "ir-clientes") { aba = "clientes"; try { localStorage.setItem(CHAVE_ABA, aba); } catch (e) {} render(); modalCliente(); return; }
     if (a === "limpar-exemplo") {
@@ -880,7 +893,7 @@
       toast("Dados de exemplo removidos (" + rx.clientes + " clientes, " + rx.equipe + " pessoas)."); render(); return;
     }
     if (a === "apagar-tudo") {
-      if (!confirm("Apagar TODOS os dados do Em Dia neste navegador (clientes, etapas, equipe, diário)? Não dá para desfazer.\n\nDica: baixe antes um backup no Master.")) return;
+      if (!confirm("Apagar TODOS os dados do Em Dia neste aparelho (clientes, etapas, equipe, diário)? Não dá para desfazer.\n\nDica: baixe antes um backup em Ajustes.")) return;
       estado = D.estadoVazio(); D.registrarMembro(estado, eu); salvar(); fecharModal();
       filtros.diario.setor = null; filtros.bastaoPessoa = ""; aba = "hoje";
       try { localStorage.setItem(CHAVE_ABA, aba); localStorage.removeItem(CHAVE_MES); } catch (e) {}
@@ -902,7 +915,8 @@
     if (el.dataset.acaoChange === "entrar-como") {
       var p2 = D.porId(estado.equipe, el.value);
       if (!p2) return;
-      try { localStorage.setItem("emDia:usuario", JSON.stringify({ id: p2.id, nome: p2.nome, email: p2.email || "", perfil: p2.perfil || "usuario" })); } catch (e) {}
+      if (!modoTeste) return;
+      try { A.iniciarSessao("teste", { id: p2.id, nome: p2.nome, email: p2.email || "", perfil: p2.perfil || "usuario" }); } catch (e) {}
       location.reload(); return;
     }
     if (el.dataset.acaoChange === "meu-setor") {
@@ -958,37 +972,91 @@
 
   document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && $("modal").style.display === "flex") fecharModal(); });
 
+  // ---------------------------------------------------------------- entrada (teste ou o seu acesso)
+
+  function telaEntrada() {
+    var temConta = A.temConta();
+    var escuro = document.documentElement.getAttribute("data-theme") === "dark";
+    var campoSenha = function (id, rotulo, auto) {
+      return '<div class="field"><label for="' + id + '">' + rotulo + '</label><div class="ac-senha"><input id="' + id + '" type="password" autocomplete="' + auto + '" required>' +
+        '<button type="button" class="ac-mostrar" data-mostrar="' + id + '">Mostrar</button></div></div>';
+    };
+    var formEntrar = '<form id="ac-entrar" class="ac-form" novalidate><h2>Entrar</h2><p class="muted">Use o e-mail e a senha que você criou neste aparelho.</p>' +
+      '<div class="field"><label for="ac-email">E-mail</label><input id="ac-email" type="email" autocomplete="username" required></div>' +
+      campoSenha("ac-senha", "Senha", "current-password") +
+      '<p class="error-msg" data-erro></p><button type="submit" class="btn btn-primary ac-largo">Entrar</button>' +
+      '<p class="ac-links">Esqueceu a senha? <button type="button" class="link-btn" data-entrada="esqueci">Criar um acesso novo</button></p>' +
+      '<p class="ac-links">Outra pessoa vai usar este aparelho? <button type="button" class="link-btn" data-entrada="criar">Criar outro acesso</button></p></form>';
+    var formCriar = '<form id="ac-criar" class="ac-form" novalidate><h2>' + (temConta ? "Criar outro acesso" : "Criar o meu acesso") + '</h2>' +
+      '<p class="muted">' + (temConta ? "Mais uma pessoa neste aparelho. Os dados são os mesmos do aparelho." : "Primeira vez neste aparelho. O seu acesso abre limpo, sem os dados de teste.") + "</p>" +
+      '<div class="field"><label for="ac-nome">Nome</label><input id="ac-nome" autocomplete="name" required></div>' +
+      '<div class="field"><label for="ac-email2">E-mail</label><input id="ac-email2" type="email" autocomplete="username" required></div>' +
+      campoSenha("ac-senha2", "Senha (mínimo 6 caracteres)", "new-password") + campoSenha("ac-senha3", "Repita a senha", "new-password") +
+      '<p class="error-msg" data-erro></p><button type="submit" class="btn btn-primary ac-largo">Criar acesso e entrar</button>' +
+      (temConta ? '<p class="ac-links"><button type="button" class="link-btn" data-entrada="voltar">Voltar para Entrar</button></p>' : "") + "</form>";
+    document.querySelector(".app").outerHTML = '<div class="ac-tela">' +
+      '<button type="button" class="btn-tema ac-tema" id="ac-tema" aria-label="Trocar tema">' + icone(escuro ? "sol" : "lua") + "</button>" +
+      '<section class="ac-marca"><img src="icons/icon-192.png" alt="" width="72" height="72"><h1>Em Dia</h1><p class="ac-sub">Fechamento e diário do escritório</p><ul>' +
+      ["Fechamento do mês de cada cliente", "Diário de cada setor: Contábil, Fiscal e Pessoal", "\u201cOnde parei\u201d em cada tarefa", "Passagem de bastão quando alguém falta", "No celular e no computador, até sem internet"]
+        .map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></section>" +
+      '<section class="ac-cartao"><div class="ac-caixa">' +
+      '<span class="ac-selo">Modo de teste</span><h2>Conheça o app</h2><p class="muted">Entre sem senha, com dados de exemplo. O que você fizer no teste fica separado dos seus dados.</p>' +
+      '<button type="button" class="btn btn-primary ac-largo" data-entrada="teste">Entrar no modo de teste</button>' +
+      '<div class="ac-ou"><span>ou entre com o seu acesso</span></div>' +
+      '<div id="ac-forms">' + (temConta ? formEntrar : formCriar) + "</div></div></section></div>";
+
+    var trocar = function (html) { document.getElementById("ac-forms").innerHTML = html; var f = document.querySelector("#ac-forms input"); if (f) f.focus(); };
+    var erro = function (form, msg) { var e = form.querySelector("[data-erro]"); e.textContent = msg; e.style.display = msg ? "block" : "none"; };
+    var ocupado = function (form, sim) { var b = form.querySelector("button[type=submit]"); b.disabled = sim; b.textContent = sim ? "Aguarde…" : b.dataset.texto || b.textContent; };
+    document.addEventListener("click", function (ev) {
+      var m = ev.target.closest("[data-mostrar]");
+      if (m) { var i = document.getElementById(m.dataset.mostrar); var ver = i.type === "password"; i.type = ver ? "text" : "password"; m.textContent = ver ? "Ocultar" : "Mostrar"; return; }
+      if (ev.target.closest("#ac-tema")) {
+        var esc2 = document.documentElement.getAttribute("data-theme") !== "dark";
+        try { localStorage.setItem(K.tema, esc2 ? "escuro" : "claro"); } catch (e) {}
+        document.documentElement.setAttribute("data-theme", esc2 ? "dark" : "light");
+        ev.target.closest("#ac-tema").innerHTML = icone(esc2 ? "sol" : "lua"); return;
+      }
+      var b = ev.target.closest("[data-entrada]");
+      if (!b) return;
+      var q = b.dataset.entrada;
+      if (q === "teste") { A.iniciarSessao("teste"); location.reload(); return; }
+      if (q === "criar") { trocar(formCriar.replace("Criar o meu acesso", "Criar outro acesso")); return; }
+      if (q === "voltar") { trocar(formEntrar); return; }
+      if (q === "esqueci") {
+        if (!confirm("Sem servidor, não dá para recuperar a senha.\n\nVocê pode apagar os acessos deste aparelho e criar um novo. Os dados do Em Dia (clientes, tarefas, diários) continuam.\n\nContinuar?")) return;
+        if (prompt("Para confirmar, digite REDEFINIR") !== "REDEFINIR") return;
+        A.redefinirAcessos(); location.reload();
+      }
+    });
+    document.addEventListener("submit", function (ev) {
+      var f = ev.target; ev.preventDefault();
+      var botao = f.querySelector("button[type=submit]"); botao.dataset.texto = botao.dataset.texto || botao.textContent;
+      if (f.id === "ac-entrar") {
+        erro(f, ""); ocupado(f, true);
+        A.entrar(f.querySelector("#ac-email").value, f.querySelector("#ac-senha").value).then(function (conta) {
+          A.iniciarSessao("conta", conta); location.reload();
+        }).catch(function (e) { ocupado(f, false); erro(f, e.message); });
+      }
+      if (f.id === "ac-criar") {
+        var s1 = f.querySelector("#ac-senha2").value;
+        if (s1 !== f.querySelector("#ac-senha3").value) { erro(f, "As duas senhas não são iguais."); return; }
+        erro(f, ""); ocupado(f, true);
+        A.criarConta({ nome: f.querySelector("#ac-nome").value, email: f.querySelector("#ac-email2").value, senha: s1 }).then(function (conta) {
+          A.iniciarSessao("conta", conta); location.reload();
+        }).catch(function (e) { ocupado(f, false); erro(f, e.message); });
+      }
+    });
+    var primeiro = document.querySelector("#ac-forms input"); if (primeiro && window.innerWidth > 860) primeiro.focus();
+  }
+
   // ---------------------------------------------------------------- início
 
-  if (!eu) {   // primeira vez, sem login de outro sistema: pergunta o nome
-    document.querySelector(".app").outerHTML = '<div class="boas-vindas"><div class="panel"><div class="panel-body">' +
-      '<img src="icons/icon-192.png" alt="" width="56" height="56">' +
-      '<h2>Bem-vindo ao Em Dia</h2><p class="muted">O fechamento do mês de cada cliente, o diário de cada setor e o “onde parei” de cada tarefa, para ninguém perder o fio quando alguém falta.</p>' +
-      '<p class="muted small" style="margin-top:12px">Para começar, diga quem é você. Seu nome aparece no diário e nas tarefas.</p>' +
-      (estado.equipe.length ? '<div class="field" style="margin-top:14px"><label for="q-existente">Já está na equipe? Escolha o seu nome</label><select id="q-existente"><option value="">Não, sou novo</option>' +
-        estado.equipe.slice().sort(function (a, b) { return a.nome.localeCompare(b.nome); }).map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.nome) + "</option>"; }).join("") + "</select></div>" : "") +
-      '<form id="quem-sou" class="ed-form"><div class="field"><label for="q-nome">Nome</label><input id="q-nome" required></div>' +
-      '<div class="field"><label for="q-email">E-mail (opcional)</label><input id="q-email" type="email"></div>' +
-      '<label class="ed-check"><input type="checkbox" id="q-gestor" checked> Sou o gestor (cadastro clientes, etapas e equipe)</label>' +
-      '<div class="form-actions"><button type="submit" class="btn btn-primary">Começar</button></div></form></div></div></div>';
-    var sel = document.getElementById("q-existente");
-    if (sel) sel.addEventListener("change", function () {
-      var p = D.porId(estado.equipe, sel.value);
-      if (!p) return;
-      try { localStorage.setItem("emDia:usuario", JSON.stringify({ id: p.id, nome: p.nome, email: p.email || "", perfil: p.perfil || "usuario" })); } catch (e) {}
-      location.reload();
-    });
-    document.getElementById("quem-sou").addEventListener("submit", function (ev) {
-      ev.preventDefault();
-      var nome = document.getElementById("q-nome").value.trim();
-      if (!nome) return;
-      try {
-        localStorage.setItem("emDia:usuario", JSON.stringify({ id: D.uid("u"), nome: nome,
-          email: document.getElementById("q-email").value.trim(), perfil: document.getElementById("q-gestor").checked ? "admin" : "usuario" }));
-      } catch (e) {}
-      location.reload();
-    });
-    return;
+  if (!eu) { telaEntrada(); return; }
+  if (testeNovo) {   // primeira vez no modo de teste: já vem com a demonstração
+    D.registrarMembro(estado, eu);
+    var rx0 = D.exemplo(estado, eu, hoje());
+    mes = rx0.mes; try { localStorage.setItem(CHAVE_MES, mes); } catch (e) {}
   }
   D.registrarMembro(estado, eu);
   salvar();

@@ -13,10 +13,13 @@ funciona sem internet, com tema claro e escuro.
 ## Testar
 
 1. Abra a pasta no VS Code e rode com o **Live Server** (o app instalável precisa de `http://`, não abre por `file://`).
-2. Na primeira vez ele pergunta **quem é você** (deixe marcado “Sou o gestor”).
-3. **Dados e ajustes → Carregar exemplo**: 8 clientes e 3 pessoas fictícias, com tarefas e diários.
-4. Para começar do zero: **Dados e ajustes → Tirar exemplo** (mantém o que vocês cadastraram) ou **Apagar tudo**.
-5. Para testar como outra pessoa no mesmo aparelho: **Dados e ajustes → Entrar como outra pessoa**.
+2. A tela de entrada tem dois caminhos:
+   - **Entrar no modo de teste**: sem senha, já com 8 clientes e 3 pessoas fictícias. Fica num espaço
+     separado: **Zerar teste** (na faixa amarela ou em Dados e ajustes) apaga só o teste.
+     Em Dados e ajustes dá para recarregar o exemplo e **entrar como outra pessoa**.
+   - **Criar o meu acesso** (nome, e-mail e senha, na primeira vez) e depois **Entrar**: abre limpo,
+     sem nada do teste. O primeiro acesso do aparelho é o gestor.
+3. **Sair** fica em Dados e ajustes (e na faixa do modo de teste).
 
 ## Publicar (GitHub Pages) e instalar
 
@@ -45,20 +48,26 @@ e `VERSAO_APP` no `js/app.js`. Quem já instalou recebe a versão nova ao abrir 
 | `js/dados.js` | todas as regras, sem tela (backup, exemplo, prazos, diários por setor...) |
 | `js/app.js` | as telas e os eventos |
 | `sw.js`, `manifest.webmanifest`, `icons/` | app instalável e sem internet |
-| `tests/emdia.test.js` | 21 testes das regras: `node --test tests/emdia.test.js` |
+| `tests/emdia.test.js`, `tests/acesso.test.js` | testes das regras e da entrada: `node --test tests/*.test.js` |
 
 ## Quem está usando
 
-Nesta ordem: `window.EM_DIA_USUARIO = {id, nome, email, perfil}` (definido por um sistema que incorpore o
-Em Dia) → login da Gestão Financeira no mesmo navegador (`gf.sessao`) → a tela “Quem é você?”
-(`localStorage` `emDia:usuario`). `perfil: "admin"` = gestor.
+`window.EM_DIA_USUARIO = {id, nome, email, perfil}` (se um sistema que incorpore o Em Dia definir) ou a
+tela de entrada (`js/acesso.js`): modo de teste ou o acesso criado no aparelho. A senha não é guardada,
+só um resumo PBKDF2-SHA256 com sal. Esqueceu a senha: **Criar um acesso novo** apaga os acessos do
+aparelho (os dados continuam). `perfil: "admin"` = gestor.
+
+O app **não** usa o login nem os dados do módulo Em Dia da Gestão Financeira, mesmo estando no mesmo
+endereço (github.io): as chaves dele começam com `emDiaApp:`.
 
 ## Dados no navegador
 
 | Chave | Conteúdo |
 |---|---|
-| `emDia:v1` | tudo (clientes, etapas, equipe, tarefas por mês, diário) |
-| `emDia:usuario` | quem está usando neste aparelho |
-| `emDia:tema` | `claro`, `escuro` ou `auto` |
-| `emDia:mes`, `emDia:aba` | onde você parou na tela |
-| `emDia:ultimoBackup` | data do último backup baixado |
+| `emDiaApp:v1` | tudo do seu acesso (clientes, etapas, equipe, tarefas por mês, diário) |
+| `emDiaApp:teste:v1` | o mesmo, do modo de teste |
+| `emDiaApp:contas` | acessos do aparelho (nome, e-mail, resumo da senha) |
+| `emDiaApp:sessao` | quem entrou e em qual modo |
+| `emDiaApp:tema` | `claro`, `escuro` ou `auto` |
+| `emDiaApp:mes`, `emDiaApp:aba` | onde você parou na tela (`:teste` no fim para o modo de teste) |
+| `emDiaApp:ultimoBackup` | data do último backup baixado |

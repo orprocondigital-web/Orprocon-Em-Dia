@@ -246,3 +246,44 @@ table.ledger th:first-child, table.ledger td:first-child { padding-left: 20px; }
   .app { display: block; }
   body { background: #fff; }
 }
+
+/* ---------- tela de entrada (modo de teste ou o seu acesso) ---------- */
+.ac-tela { min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); position: relative; }
+.ac-tema { position: absolute; top: 16px; right: 16px; }
+.ac-marca { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 48px 32px;
+  background: radial-gradient(ellipse at 30% 20%, var(--brand-soft), transparent 60%), var(--surface); border-right: 1px solid var(--line); }
+.ac-marca img { border-radius: 18px; box-shadow: var(--sombra); }
+.ac-marca h1 { font-size: 34px; letter-spacing: -0.02em; margin: 18px 0 4px; }
+.ac-sub { color: var(--muted); margin: 0 0 26px; }
+.ac-marca ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; text-align: left; color: var(--ink-2); font-size: 14.5px; }
+.ac-marca li { display: flex; align-items: center; gap: 10px; }
+.ac-marca li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); flex: none; }
+.ac-cartao { display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
+.ac-caixa { width: 100%; max-width: 380px; display: grid; gap: 12px; }
+.ac-caixa h2 { font-size: 22px; letter-spacing: -0.01em; margin: 0; }
+.ac-caixa p { margin: 0; }
+.ac-selo { justify-self: start; display: inline-block; background: var(--warn-soft); color: var(--warn); font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.ac-largo { width: 100%; justify-content: center; min-height: 42px; }
+.ac-ou { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 12.5px; margin: 12px 0 4px; }
+.ac-ou::before, .ac-ou::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.ac-form { display: grid; gap: 12px; }
+.ac-form h2 { font-size: 18px; }
+.ac-senha { position: relative; }
+.ac-senha input { width: 100%; padding-right: 76px; }
+.ac-mostrar { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: 0; background: none; color: var(--brand); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 6px 8px; }
+.ac-links { font-size: 13px; color: var(--muted); }
+@media (max-width: 860px) {
+  .ac-tela { grid-template-columns: 1fr; }
+  .ac-marca { padding: 56px 24px 24px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .ac-marca ul { display: none; }
+  .ac-marca h1 { font-size: 28px; margin-top: 12px; }
+  .ac-sub { margin-bottom: 0; }
+  .ac-cartao { align-items: flex-start; padding: 24px 16px 40px; }
+}
+
+/* faixa do modo de teste, no alto de cada tela */
+.ed-faixa-teste { display: flex; align-items: center; gap: 10px 12px; flex-wrap: wrap; margin-bottom: 16px; padding: 10px 14px;
+  border: 1px dashed var(--warn); background: var(--warn-soft); border-radius: var(--r); font-size: 13.5px; color: var(--ink-2); }
+.ed-faixa-teste .acoes { margin-left: auto; display: flex; gap: 6px; }
+@media (max-width: 860px) { .ed-faixa-teste .acoes { margin-left: 0; width: 100%; } .ed-faixa-teste .acoes .btn { flex: 1; justify-content: center; } }

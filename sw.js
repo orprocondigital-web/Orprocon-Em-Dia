@@ -9,7 +9,8 @@ var CACHE_FONTES = "em-dia-fontes";
 var ARQUIVOS = [
   "./", "index.html", "manifest.webmanifest",
   "css/app.css?v=" + VERSAO, "css/em-dia.css?v=" + VERSAO,
-  "js/dados.js?v=" + VERSAO, "js/acesso.js?v=" + VERSAO, "js/app.js?v=" + VERSAO,
+  "js/dados.js?v=" + VERSAO, "js/storage.js?v=" + VERSAO, "js/auth.js?v=" + VERSAO, "js/acesso.js?v=" + VERSAO,
+  "js/app.js?v=" + VERSAO, "js/entrada.js?v=" + VERSAO,
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png"
 ];
 

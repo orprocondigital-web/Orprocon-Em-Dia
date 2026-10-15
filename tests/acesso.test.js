@@ -1,51 +1,42 @@
-// Entrada do Em Dia: modo de teste separado, acesso com senha (PBKDF2), sessão.
+// Login do Em Dia = o da Gestão Financeira (mesmo AuthCore e mesma lista de acessos), com sessão e dados próprios.
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const A = require("../js/acesso.js");
+const AuthCore = require("../js/auth.js");
 
 function memoria() {
   const m = new Map();
   return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), _m: m };
 }
+function store() { const c = {}; return { get: (k) => c[k], set: (k, v) => { c[k] = v; return Promise.resolve(true); } }; }
 
-test("teste e acesso usam espaços de dados diferentes, e nenhum é o do módulo da Gestão Financeira", () => {
-  const s = memoria();
-  const t = A.iniciarSessao("teste", null, s);
-  assert.equal(A.chaveDados(t), "emDiaApp:teste:v1");
-  assert.equal(A.chaveDados({ modo: "conta" }), "emDiaApp:v1");
-  assert.equal(t.usuario.id, "teste");
+test("teste e usuário de verdade usam espaços de dados diferentes, nenhum é o do módulo da Gestão Financeira", () => {
+  assert.equal(A.chaveDados({ teste: true }), "emDiaApp:teste:v1");
+  assert.equal(A.chaveDados({ teste: false }), "emDiaApp:v1");
   assert.ok(Object.values(A.CHAVES).every((k) => k.startsWith("emDiaApp:")));
 });
 
-test("criar acesso: a senha não fica guardada; entrar confere a senha", async () => {
-  const s = memoria();
-  assert.equal(A.temConta(s), false);
-  const c = await A.criarConta({ nome: "Pessoa Exemplo", email: " Pessoa@Exemplo.com ", senha: "segredo1" }, s);
-  assert.equal(c.perfil, "admin", "o primeiro acesso é o gestor");
-  assert.equal(c.email, "pessoa@exemplo.com");
-  const bruto = s.getItem("emDiaApp:contas");
-  assert.ok(!bruto.includes("segredo1"));
-  const ok = await A.entrar("PESSOA@exemplo.com", "segredo1", s);
-  assert.equal(ok.id, c.id);
-  await assert.rejects(A.entrar("pessoa@exemplo.com", "errada", s), /não conferem/);
-  await assert.rejects(A.entrar("outra@exemplo.com", "segredo1", s), /não conferem/);
-  await assert.rejects(A.criarConta({ nome: "X", email: "pessoa@exemplo.com", senha: "123456" }, s), /Já existe/);
-  await assert.rejects(A.criarConta({ nome: "X", email: "x@exemplo.com", senha: "123" }, s), /6 caracteres/);
-  const c2 = await A.criarConta({ nome: "Outra Exemplo", email: "outra@exemplo.com", senha: "123456" }, s);
-  assert.equal(c2.perfil, "usuario");
+test("o admin criado na Gestão Financeira entra no Em Dia com a mesma senha; a sessão é separada", async () => {
+  const acessos = store(), ls = memoria();
+  const gf = AuthCore.criarAuthLocal(acessos, ls, { modoTeste: true });          // a Gestão Financeira
+  await gf.configurarAdmin("Admin Exemplo", "SenhaTeste123");
+  const ed = AuthCore.criarAuthLocal(acessos, A.sessaoPropria(ls, AuthCore.CHAVE_SESSAO), { modoTeste: true });   // o Em Dia
+  await assert.rejects(ed.entrar(AuthCore.ADMIN_EMAIL, "errada1234"), /incorretos/);
+  const u = await ed.entrar(AuthCore.ADMIN_EMAIL, "SenhaTeste123");
+  assert.equal(u.perfil, "admin");
+  assert.ok(ls.getItem("emDiaApp:sessao"), "sessão do Em Dia gravada");
+  assert.equal(ls.getItem("gf.sessao"), null, "não entrou na Gestão Financeira junto");
+  assert.equal((await ed.usuarioAtual()).email, AuthCore.ADMIN_EMAIL);
+  assert.equal(await gf.usuarioAtual(), null);
+  await ed.sair();
+  assert.equal(await ed.usuarioAtual(), null);
 });
 
-test("sessão: entra, sai, e some se o acesso for apagado", async () => {
-  const s = memoria();
-  const c = await A.criarConta({ nome: "Pessoa Exemplo", email: "p@exemplo.com", senha: "segredo1" }, s);
-  A.iniciarSessao("conta", c, s);
-  assert.equal(A.sessaoAtual(s).usuario.nome, "Pessoa Exemplo");
-  A.sair(s);
-  assert.equal(A.sessaoAtual(s), null);
-  A.iniciarSessao("conta", c, s);
-  s.setItem("emDiaApp:v1", "{}");
-  A.redefinirAcessos(s);
-  assert.equal(A.sessaoAtual(s), null);
-  assert.equal(A.temConta(s), false);
-  assert.equal(s.getItem("emDiaApp:v1"), "{}", "os dados continuam");
+test("modo de teste: entra sem senha, marcado como teste (vai para os dados de teste)", async () => {
+  const ls = memoria();
+  const ed = AuthCore.criarAuthLocal(store(), A.sessaoPropria(ls, AuthCore.CHAVE_SESSAO), { modoTeste: true });
+  const u = await ed.entrarTeste();
+  assert.equal(u.teste, true);
+  assert.equal(A.chaveDados(u), "emDiaApp:teste:v1");
+  assert.ok(AuthCore.podeAcessar(u, A.AREA));
 });

@@ -13,13 +13,14 @@ funciona sem internet, com tema claro e escuro.
 ## Testar
 
 1. Abra a pasta no VS Code e rode com o **Live Server** (o app instalável precisa de `http://`, não abre por `file://`).
-2. A tela de entrada tem dois caminhos:
-   - **Entrar no modo de teste**: sem senha, já com 8 clientes e 3 pessoas fictícias. Fica num espaço
-     separado: **Zerar teste** (na faixa amarela ou em Dados e ajustes) apaga só o teste.
-     Em Dados e ajustes dá para recarregar o exemplo e **entrar como outra pessoa**.
-   - **Criar o meu acesso** (nome, e-mail e senha, na primeira vez) e depois **Entrar**: abre limpo,
-     sem nada do teste. O primeiro acesso do aparelho é o gestor.
-3. **Sair** fica em Dados e ajustes (e na faixa do modo de teste).
+2. A tela de login é igual à da Gestão Financeira, com **os mesmos acessos**:
+   - **Entrar no modo de teste**: sem senha, já com 8 clientes e 3 pessoas fictícias, num espaço
+     separado. **Zerar teste** (na faixa amarela ou em Dados e ajustes) apaga só o teste.
+   - **E-mail e senha da Gestão Financeira** (o administrador e os usuários criados lá): abre limpo.
+     Usuário que não é administrador precisa da área **Em Dia** liberada em Usuários, na Gestão Financeira.
+   - Aparelho onde a Gestão Financeira nunca foi aberta (ex.: celular): **Importar o arquivo de acessos**
+     ou, para o administrador principal, **Criar o primeiro acesso**, como no sistema.
+3. **Sair** fica em Dados e ajustes (e na faixa do modo de teste). Sair do Em Dia não sai da Gestão Financeira.
 
 ## Publicar (GitHub Pages) e instalar
 
@@ -52,13 +53,13 @@ e `VERSAO_APP` no `js/app.js`. Quem já instalou recebe a versão nova ao abrir 
 
 ## Quem está usando
 
-`window.EM_DIA_USUARIO = {id, nome, email, perfil}` (se um sistema que incorpore o Em Dia definir) ou a
-tela de entrada (`js/acesso.js`): modo de teste ou o acesso criado no aparelho. A senha não é guardada,
-só um resumo PBKDF2-SHA256 com sal. Esqueceu a senha: **Criar um acesso novo** apaga os acessos do
-aparelho (os dados continuam). `perfil: "admin"` = gestor.
-
-O app **não** usa o login nem os dados do módulo Em Dia da Gestão Financeira, mesmo estando no mesmo
-endereço (github.io): as chaves dele começam com `emDiaApp:`.
+O login é o da Gestão Financeira: `js/auth.js` e `js/storage.js` são **cópias** de lá (mantenha iguais).
+Os acessos ficam no IndexedDB `gestao-financeira` (chave `auth:usuarios`), que o navegador divide entre os
+dois apps porque estão no mesmo endereço (`orprocondigital-web.github.io`). A sessão é do Em Dia
+(`emDiaApp:sessao`, via `js/acesso.js`), então entrar ou sair num não mexe no outro.
+`js/entrada.js` é a tela de login; depois de entrar chama `EmDiaApp.iniciar(usuario, sair)`.
+Um sistema que incorpore o Em Dia pode definir `window.EM_DIA_USUARIO = {id, nome, email, perfil}` antes
+(aí não há login). `perfil: "admin"` = gestor.
 
 ## Dados no navegador
 
@@ -66,8 +67,7 @@ endereço (github.io): as chaves dele começam com `emDiaApp:`.
 |---|---|
 | `emDiaApp:v1` | tudo do seu acesso (clientes, etapas, equipe, tarefas por mês, diário) |
 | `emDiaApp:teste:v1` | o mesmo, do modo de teste |
-| `emDiaApp:contas` | acessos do aparelho (nome, e-mail, resumo da senha) |
-| `emDiaApp:sessao` | quem entrou e em qual modo |
+| `emDiaApp:sessao` | quem entrou (sessão de 12 h, renovada ao usar) |
 | `emDiaApp:tema` | `claro`, `escuro` ou `auto` |
 | `emDiaApp:mes`, `emDiaApp:aba` | onde você parou na tela (`:teste` no fim para o modo de teste) |
 | `emDiaApp:ultimoBackup` | data do último backup baixado |

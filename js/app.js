@@ -12,13 +12,14 @@
  * Os dados ficam neste navegador: "emDiaApp:v1" (seu acesso) e "emDiaApp:teste:v1" (modo de teste).
  * Com o servidor, a equipe passa a ver os mesmos dados em todos os computadores.
  */
-(function () {
+/** Chamado por entrada.js depois do login: usuario = {id, nome, email, perfil, teste}; sairFn = encerra a sessão. */
+window.EmDiaApp = { iniciar: function (usuario, sairFn) {
   "use strict";
   var D = EmDiaDados, A = EmDiaAcesso, K = A.CHAVES;
-  var sessaoApp = window.EM_DIA_USUARIO && window.EM_DIA_USUARIO.id ? { modo: "externo", usuario: window.EM_DIA_USUARIO } : A.sessaoAtual();
-  var modoTeste = !!sessaoApp && sessaoApp.modo === "teste";
+  var sessaoApp = { modo: usuario.teste ? "teste" : sairFn ? "conta" : "externo", usuario: usuario };
+  var modoTeste = !!usuario.teste;
   var sufixo = modoTeste ? ":teste" : "";
-  var CHAVE = A.chaveDados(sessaoApp), CHAVE_MES = K.mes + sufixo, CHAVE_ABA = K.aba + sufixo, CHAVE_BACKUP = K.ultimoBackup + sufixo;
+  var CHAVE = A.chaveDados(usuario), CHAVE_MES = K.mes + sufixo, CHAVE_ABA = K.aba + sufixo, CHAVE_BACKUP = K.ultimoBackup + sufixo;
   var testeNovo = modoTeste && (function () { try { return localStorage.getItem(CHAVE) === null; } catch (e) { return false; } })();
   var $ = function (id) { return document.getElementById(id); };
 
@@ -191,8 +192,6 @@
     var pessoas = pessoasOpcoes();
     var voce = '<div class="ed-ajuste-linha"><div class="ed-eu">' + avatar(eu.id) + "<div><strong>" + esc(eu.nome) + '</strong><span class="muted small">' + esc(eu.email || (gestor ? "Gestor" : "Equipe")) + "</span></div></div>" +
       '<div class="field"><label for="aj-setor">Meu setor</label><select id="aj-setor" data-acao-change="meu-setor">' + opcoes(D.SETORES, meuSetor(), "Nenhum") + "</select></div></div>" +
-      (modoTeste && pessoas.length > 1 ? '<div class="ed-ajuste-linha"><div><strong>Entrar como outra pessoa</strong><p class="muted small">No teste, veja o app como outro membro da equipe.</p></div>' +
-        '<select data-acao-change="entrar-como" aria-label="Entrar como">' + opcoes(pessoas, eu.id) + "</select></div>" : "") +
       (sessaoApp.modo !== "externo" ? '<div class="ed-ajuste-linha"><div><strong>Sair</strong><p class="muted small">' + (modoTeste ? "Sai do modo de teste. Os dados de teste ficam guardados para a próxima vez." : "Volta para a tela de entrada. Os seus dados continuam neste aparelho.") +
         '</p></div><button type="button" class="btn btn-outline" data-acao="sair">Sair</button></div>' : "");
     var aparencia = '<div class="segmentado" role="group" aria-label="Tema">' + [["claro", "Claro"], ["escuro", "Escuro"], ["auto", "Automático"]].map(function (o) {
@@ -874,8 +873,8 @@
     if (a === "backup-restaurar") { $("arquivo-backup").value = ""; $("arquivo-backup").click(); return; }
     if (a === "instalar") { if (pedidoInstalar) { pedidoInstalar.prompt(); pedidoInstalar.userChoice.then(function () { pedidoInstalar = null; render(); }); } return; }
     if (a === "sair") {
-      try { A.sair(); } catch (e) {}
-      location.reload(); return;
+      Promise.resolve(sairFn && sairFn()).then(function () { location.reload(); });
+      return;
     }
     if (a === "zerar-teste") {
       if (!modoTeste) return;
@@ -912,13 +911,6 @@
     if (el.dataset.filtroDiario) { filtros.diario[el.dataset.filtroDiario] = el.value; if (el.type !== "search") render(); return; }
     if (el.dataset.acaoChange === "bastao-pessoa") { filtros.bastaoPessoa = el.value; render(); return; }
     if (el.id === "arquivo-backup") { if (el.files && el.files[0]) restaurarBackup(el.files[0]); return; }
-    if (el.dataset.acaoChange === "entrar-como") {
-      var p2 = D.porId(estado.equipe, el.value);
-      if (!p2) return;
-      if (!modoTeste) return;
-      try { A.iniciarSessao("teste", { id: p2.id, nome: p2.nome, email: p2.email || "", perfil: p2.perfil || "usuario" }); } catch (e) {}
-      location.reload(); return;
-    }
     if (el.dataset.acaoChange === "meu-setor") {
       var eu2 = D.porId(estado.equipe, eu.id);
       if (eu2) { eu2.setor = el.value; filtros.diario.setor = null; salvar(); toast(el.value ? "Seu setor: " + nomeSetor(el.value) + "." : "Sem setor definido."); render(); }
@@ -972,87 +964,8 @@
 
   document.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && $("modal").style.display === "flex") fecharModal(); });
 
-  // ---------------------------------------------------------------- entrada (teste ou o seu acesso)
-
-  function telaEntrada() {
-    var temConta = A.temConta();
-    var escuro = document.documentElement.getAttribute("data-theme") === "dark";
-    var campoSenha = function (id, rotulo, auto) {
-      return '<div class="field"><label for="' + id + '">' + rotulo + '</label><div class="ac-senha"><input id="' + id + '" type="password" autocomplete="' + auto + '" required>' +
-        '<button type="button" class="ac-mostrar" data-mostrar="' + id + '">Mostrar</button></div></div>';
-    };
-    var formEntrar = '<form id="ac-entrar" class="ac-form" novalidate><h2>Entrar</h2><p class="muted">Use o e-mail e a senha que você criou neste aparelho.</p>' +
-      '<div class="field"><label for="ac-email">E-mail</label><input id="ac-email" type="email" autocomplete="username" required></div>' +
-      campoSenha("ac-senha", "Senha", "current-password") +
-      '<p class="error-msg" data-erro></p><button type="submit" class="btn btn-primary ac-largo">Entrar</button>' +
-      '<p class="ac-links">Esqueceu a senha? <button type="button" class="link-btn" data-entrada="esqueci">Criar um acesso novo</button></p>' +
-      '<p class="ac-links">Outra pessoa vai usar este aparelho? <button type="button" class="link-btn" data-entrada="criar">Criar outro acesso</button></p></form>';
-    var formCriar = '<form id="ac-criar" class="ac-form" novalidate><h2>' + (temConta ? "Criar outro acesso" : "Criar o meu acesso") + '</h2>' +
-      '<p class="muted">' + (temConta ? "Mais uma pessoa neste aparelho. Os dados são os mesmos do aparelho." : "Primeira vez neste aparelho. O seu acesso abre limpo, sem os dados de teste.") + "</p>" +
-      '<div class="field"><label for="ac-nome">Nome</label><input id="ac-nome" autocomplete="name" required></div>' +
-      '<div class="field"><label for="ac-email2">E-mail</label><input id="ac-email2" type="email" autocomplete="username" required></div>' +
-      campoSenha("ac-senha2", "Senha (mínimo 6 caracteres)", "new-password") + campoSenha("ac-senha3", "Repita a senha", "new-password") +
-      '<p class="error-msg" data-erro></p><button type="submit" class="btn btn-primary ac-largo">Criar acesso e entrar</button>' +
-      (temConta ? '<p class="ac-links"><button type="button" class="link-btn" data-entrada="voltar">Voltar para Entrar</button></p>' : "") + "</form>";
-    document.querySelector(".app").outerHTML = '<div class="ac-tela">' +
-      '<button type="button" class="btn-tema ac-tema" id="ac-tema" aria-label="Trocar tema">' + icone(escuro ? "sol" : "lua") + "</button>" +
-      '<section class="ac-marca"><img src="icons/icon-192.png" alt="" width="72" height="72"><h1>Em Dia</h1><p class="ac-sub">Fechamento e diário do escritório</p><ul>' +
-      ["Fechamento do mês de cada cliente", "Diário de cada setor: Contábil, Fiscal e Pessoal", "\u201cOnde parei\u201d em cada tarefa", "Passagem de bastão quando alguém falta", "No celular e no computador, até sem internet"]
-        .map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></section>" +
-      '<section class="ac-cartao"><div class="ac-caixa">' +
-      '<span class="ac-selo">Modo de teste</span><h2>Conheça o app</h2><p class="muted">Entre sem senha, com dados de exemplo. O que você fizer no teste fica separado dos seus dados.</p>' +
-      '<button type="button" class="btn btn-primary ac-largo" data-entrada="teste">Entrar no modo de teste</button>' +
-      '<div class="ac-ou"><span>ou entre com o seu acesso</span></div>' +
-      '<div id="ac-forms">' + (temConta ? formEntrar : formCriar) + "</div></div></section></div>";
-
-    var trocar = function (html) { document.getElementById("ac-forms").innerHTML = html; var f = document.querySelector("#ac-forms input"); if (f) f.focus(); };
-    var erro = function (form, msg) { var e = form.querySelector("[data-erro]"); e.textContent = msg; e.style.display = msg ? "block" : "none"; };
-    var ocupado = function (form, sim) { var b = form.querySelector("button[type=submit]"); b.disabled = sim; b.textContent = sim ? "Aguarde…" : b.dataset.texto || b.textContent; };
-    document.addEventListener("click", function (ev) {
-      var m = ev.target.closest("[data-mostrar]");
-      if (m) { var i = document.getElementById(m.dataset.mostrar); var ver = i.type === "password"; i.type = ver ? "text" : "password"; m.textContent = ver ? "Ocultar" : "Mostrar"; return; }
-      if (ev.target.closest("#ac-tema")) {
-        var esc2 = document.documentElement.getAttribute("data-theme") !== "dark";
-        try { localStorage.setItem(K.tema, esc2 ? "escuro" : "claro"); } catch (e) {}
-        document.documentElement.setAttribute("data-theme", esc2 ? "dark" : "light");
-        ev.target.closest("#ac-tema").innerHTML = icone(esc2 ? "sol" : "lua"); return;
-      }
-      var b = ev.target.closest("[data-entrada]");
-      if (!b) return;
-      var q = b.dataset.entrada;
-      if (q === "teste") { A.iniciarSessao("teste"); location.reload(); return; }
-      if (q === "criar") { trocar(formCriar.replace("Criar o meu acesso", "Criar outro acesso")); return; }
-      if (q === "voltar") { trocar(formEntrar); return; }
-      if (q === "esqueci") {
-        if (!confirm("Sem servidor, não dá para recuperar a senha.\n\nVocê pode apagar os acessos deste aparelho e criar um novo. Os dados do Em Dia (clientes, tarefas, diários) continuam.\n\nContinuar?")) return;
-        if (prompt("Para confirmar, digite REDEFINIR") !== "REDEFINIR") return;
-        A.redefinirAcessos(); location.reload();
-      }
-    });
-    document.addEventListener("submit", function (ev) {
-      var f = ev.target; ev.preventDefault();
-      var botao = f.querySelector("button[type=submit]"); botao.dataset.texto = botao.dataset.texto || botao.textContent;
-      if (f.id === "ac-entrar") {
-        erro(f, ""); ocupado(f, true);
-        A.entrar(f.querySelector("#ac-email").value, f.querySelector("#ac-senha").value).then(function (conta) {
-          A.iniciarSessao("conta", conta); location.reload();
-        }).catch(function (e) { ocupado(f, false); erro(f, e.message); });
-      }
-      if (f.id === "ac-criar") {
-        var s1 = f.querySelector("#ac-senha2").value;
-        if (s1 !== f.querySelector("#ac-senha3").value) { erro(f, "As duas senhas não são iguais."); return; }
-        erro(f, ""); ocupado(f, true);
-        A.criarConta({ nome: f.querySelector("#ac-nome").value, email: f.querySelector("#ac-email2").value, senha: s1 }).then(function (conta) {
-          A.iniciarSessao("conta", conta); location.reload();
-        }).catch(function (e) { ocupado(f, false); erro(f, e.message); });
-      }
-    });
-    var primeiro = document.querySelector("#ac-forms input"); if (primeiro && window.innerWidth > 860) primeiro.focus();
-  }
-
   // ---------------------------------------------------------------- início
 
-  if (!eu) { telaEntrada(); return; }
   if (testeNovo) {   // primeira vez no modo de teste: já vem com a demonstração
     D.registrarMembro(estado, eu);
     var rx0 = D.exemplo(estado, eu, hoje());
@@ -1061,4 +974,4 @@
   D.registrarMembro(estado, eu);
   salvar();
   render();
-})();
+}};

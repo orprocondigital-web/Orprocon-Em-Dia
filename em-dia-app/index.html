@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Em Dia</title>
+<meta name="description" content="Fechamento do mês, diário de cada setor e passagem de bastão para escritórios de contabilidade.">
+<meta name="theme-color" content="#2445B0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D121C" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=1.0.0">
+<link rel="stylesheet" href="css/em-dia.css?v=1.0.0">
+<script>
+  // tema antes de desenhar a página, para não piscar claro
+  (function () {
+    var t = "auto";
+    try { t = localStorage.getItem("emDia:tema") || "auto"; } catch (e) {}
+    var escuro = t === "escuro" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+    document.documentElement.setAttribute("data-theme", escuro ? "dark" : "light");
+  })();
+</script>
+</head>
+<body>
+<div class="app">
+  <aside class="lateral" aria-label="Menu">
+    <div class="marca">
+      <img src="icons/icon-192.png" alt="" width="32" height="32">
+      <div><strong>Em Dia</strong><span>Fechamento e diário</span></div>
+    </div>
+    <nav id="abas" class="nav-lateral" aria-label="Telas"></nav>
+    <div class="lateral-pe">
+      <button type="button" class="btn-tema" data-acao="tema" id="btn-tema" aria-label="Trocar tema"></button>
+      <div class="ed-eu" id="eu"></div>
+    </div>
+  </aside>
+
+  <div class="principal">
+    <header class="topo">
+      <div class="topo-titulo">
+        <h1 id="titulo-tela">Em Dia</h1>
+      </div>
+      <div class="ed-mes" role="group" aria-label="Competência">
+        <button type="button" class="btn btn-ghost btn-sm" data-acao="mes-anterior" aria-label="Mês anterior">‹</button>
+        <div class="ed-mes-rotulo"><span>Competência</span><strong id="mes-rotulo"></strong></div>
+        <button type="button" class="btn btn-ghost btn-sm" data-acao="mes-seguinte" aria-label="Mês seguinte">›</button>
+      </div>
+      <div class="topo-acoes">
+        <button type="button" class="btn-tema so-celular" data-acao="tema" id="btn-tema-2" aria-label="Trocar tema"></button>
+        <button type="button" class="btn btn-primary so-desktop" data-acao="registrar">Registrar atividade</button>
+      </div>
+    </header>
+    <main id="tela" class="ed-tela"></main>
+  </div>
+
+  <nav id="abas-celular" class="nav-celular" aria-label="Telas"></nav>
+  <button type="button" class="fab so-celular" data-acao="registrar" aria-label="Registrar atividade">+</button>
+</div>
+
+<div class="modal" id="modal" style="display:none" role="dialog" aria-modal="true">
+  <div class="modal-card ed-modal" id="modal-card"></div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<input type="file" id="arquivo-backup" accept=".json,application/json" hidden>
+
+<script src="js/dados.js?v=1.0.0"></script>
+<script src="js/app.js?v=1.0.0"></script>
+<script>
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  }
+</script>
+</body>
+</html>

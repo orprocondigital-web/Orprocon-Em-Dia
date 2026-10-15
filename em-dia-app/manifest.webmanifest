@@ -1,0 +1,21 @@
+{
+  "name": "Em Dia — fechamento e diário",
+  "short_name": "Em Dia",
+  "description": "Fechamento do mês por cliente, diário de cada setor e passagem de bastão.",
+  "lang": "pt-BR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F3F5F8",
+  "theme_color": "#2445B0",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Meu dia", "url": "./?aba=hoje" },
+    { "name": "Diários dos setores", "url": "./?aba=diario" }
+  ]
+}

@@ -2,53 +2,60 @@
    As regras específicas das telas ficam em em-dia.css. */
 
 :root {
-  --bg: #F3F5F8;
+  /* identidade da Orprocon (mesmas cores da Gestão Financeira): dourado #E19A2A, grafite #49433A, creme #ECE4D8 */
+  --bg: #F7F5F1;
   --surface: #FFFFFF;
-  --surface-2: #F6F8FB;
-  --ink: #172033;
-  --ink-2: #364154;
-  --muted: #5F6A7D;
-  --line: #E2E6ED;
-  --line-strong: #CDD3DD;
-  --brand: #2445B0;          /* azul caneta */
-  --brand-hover: #1C3893;
-  --brand-soft: #E9EEFC;
+  --surface-2: #FBF9F6;
+  --ink: #2B2620;
+  --ink-2: #49433A;
+  --muted: #6E665B;
+  --line: #E9E3D9;
+  --line-strong: #D8D0C3;
+  --brand: #9A6212;          /* dourado escuro: texto e destaques legíveis */
+  --brand-hover: #7A4E0C;
+  --brand-soft: #FBEFD9;
   --on-brand: #FFFFFF;
-  --credit: #15803D;  --ok-soft: #E4F4EA;
-  --warn: #A16207;    --warn-soft: #FBF1DC;
-  --debit: #B42318;   --debit-soft: #FBE9E7;
-  --info: #2563A8;    --info-soft: #E5EFFA;
+  --brand-fill: #E19A2A;     /* dourado da logo: botões, sempre com texto escuro */
+  --brand-fill-hover: #CF8A1E;
+  --on-fill: #241F19;
+  --grafite: #3A342C; --on-grafite: #F4EFE6;
+  --credit: #2F7D4F;  --ok-soft: #E5F2EA;
+  --warn: #9A4A07;    --warn-soft: #FFF1E0;
+  --debit: #B42318;   --debit-soft: #FBEAE7;
+  --info: #3B5BA9;    --info-soft: #E9EEF9;
   --setor-contabil: #0F7B6C; --setor-contabil-soft: #E0F2EF;
   --setor-fiscal: #5B4BD6;   --setor-fiscal-soft: #ECEAFB;
-  --setor-pessoal: #B45309;  --setor-pessoal-soft: #FBEEDD;
+  --setor-pessoal: #B4532A;  --setor-pessoal-soft: #FBE9E1;
   --r-sm: 6px; --r: 10px; --r-lg: 14px;
-  --sombra: 0 1px 2px rgba(23, 32, 51, .06), 0 4px 16px rgba(23, 32, 51, .05);
-  --focus: 0 0 0 3px rgba(36, 69, 176, .28);
+  --sombra: 0 1px 2px rgba(43, 38, 32, .06), 0 4px 16px rgba(43, 38, 32, .05);
+  --focus: 0 0 0 3px rgba(225, 154, 42, .35);
   --lateral: 236px;
   color-scheme: light;
 }
 :root[data-theme="dark"] {
-  --bg: #0D121C;
-  --surface: #151C29;
-  --surface-2: #1B2333;
-  --ink: #E7EBF3;
-  --ink-2: #C5CCD9;
-  --muted: #98A2B5;
-  --line: #263044;
-  --line-strong: #36415A;
-  --brand: #8EA5F5;
-  --brand-hover: #A9BBF8;
-  --brand-soft: #1E2A4D;
-  --on-brand: #0D121C;
-  --credit: #4ADE80;  --ok-soft: #13301F;
-  --warn: #F3B54A;    --warn-soft: #33270F;
-  --debit: #F87171;   --debit-soft: #3A1717;
-  --info: #7DB4F2;    --info-soft: #14263D;
+  --bg: #14120F;
+  --surface: #1D1A16;
+  --surface-2: #24201B;
+  --ink: #ECE4D8;
+  --ink-2: #CFC6B8;
+  --muted: #A1988A;
+  --line: #322C25;
+  --line-strong: #3E372E;
+  --brand: #F2C177;
+  --brand-hover: #F6D29A;
+  --brand-soft: #3A2C17;
+  --on-brand: #1A160F;
+  --brand-fill: #E9A940; --brand-fill-hover: #F2B85A; --on-fill: #1A160F;
+  --grafite: #3A2C17; --on-grafite: #F2C177;
+  --credit: #79CF9C;  --ok-soft: #1C2E22;
+  --warn: #F3A86A;    --warn-soft: #3A2717;
+  --debit: #F4907F;   --debit-soft: #3A1E1A;
+  --info: #A9BCF0;    --info-soft: #222A40;
   --setor-contabil: #4CC9B5; --setor-contabil-soft: #12302B;
   --setor-fiscal: #A99BFA;   --setor-fiscal-soft: #241F45;
-  --setor-pessoal: #F0A55A;  --setor-pessoal-soft: #36230F;
-  --sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
-  --focus: 0 0 0 3px rgba(142, 165, 245, .35);
+  --setor-pessoal: #F09A75;  --setor-pessoal-soft: #3A2218;
+  --sombra: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .3);
+  --focus: 0 0 0 3px rgba(233, 169, 64, .4);
   color-scheme: dark;
 }
 
@@ -56,7 +63,7 @@
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font: 14px/1.5 "Instrument Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 14px/1.5 "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
 }
@@ -137,8 +144,8 @@ a { color: var(--brand); }
   .nav-celular .conta { position: absolute; top: 2px; left: 55%; margin: 0; }
   .fab {
     display: grid; place-items: center; position: fixed; right: 16px; bottom: calc(72px + env(safe-area-inset-bottom)); z-index: 31;
-    width: 56px; height: 56px; border-radius: 18px; border: 0; background: var(--brand); color: var(--on-brand);
-    font-size: 28px; line-height: 1; box-shadow: 0 6px 20px rgba(36, 69, 176, .35); cursor: pointer;
+    width: 56px; height: 56px; border-radius: 18px; border: 0; background: var(--brand-fill); color: var(--on-fill);
+    font-size: 28px; line-height: 1; box-shadow: 0 6px 20px rgba(154, 98, 18, .35); cursor: pointer;
   }
   .fab:focus-visible { outline: none; box-shadow: var(--focus); }
 }
@@ -152,8 +159,8 @@ a { color: var(--brand); }
 .btn:focus-visible { outline: none; box-shadow: var(--focus); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn-sm { padding: 5px 10px; font-size: 12.5px; border-radius: var(--r-sm); }
-.btn-primary { background: var(--brand); color: var(--on-brand); }
-.btn-primary:hover { background: var(--brand-hover); }
+.btn-primary { background: var(--brand-fill); color: var(--on-fill); font-weight: 650; }
+.btn-primary:hover { background: var(--brand-fill-hover); }
 .btn-soft { background: var(--brand-soft); color: var(--brand); }
 .btn-soft:hover { border-color: var(--brand); }
 .btn-outline { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
@@ -198,9 +205,9 @@ input[type=checkbox], input[type=radio] { accent-color: var(--brand); }
 .stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 18px; box-shadow: var(--sombra); min-width: 0; }
 .stat .label { font-size: 12.5px; color: var(--muted); font-weight: 550; }
 .stat .value { font-size: 26px; font-weight: 650; letter-spacing: -.02em; margin-top: 4px; line-height: 1.15; }
-.stat.primary { background: var(--brand); border-color: var(--brand); }
-.stat.primary .label, .stat.primary .sub { color: color-mix(in srgb, var(--on-brand) 78%, transparent); }
-.stat.primary .value { color: var(--on-brand); }
+.stat.primary { background: var(--grafite); border-color: var(--grafite); }
+.stat.primary .label, .stat.primary .sub { color: color-mix(in srgb, var(--on-grafite) 78%, transparent); }
+.stat.primary .value { color: var(--brand-fill); }
 .val-d { color: var(--debit); font-weight: 650; }
 .num { text-align: right; }
 .pct-bar { display: inline-block; vertical-align: middle; width: 56px; height: 6px; margin-right: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
@@ -257,7 +264,7 @@ table.ledger th:first-child, table.ledger td:first-child { padding-left: 20px; }
 .ac-sub { color: var(--muted); margin: 0 0 26px; }
 .ac-marca ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; text-align: left; color: var(--ink-2); font-size: 14.5px; }
 .ac-marca li { display: flex; align-items: center; gap: 10px; }
-.ac-marca li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand); flex: none; }
+.ac-marca li::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--brand-fill); flex: none; }
 .ac-cartao { display: flex; align-items: center; justify-content: center; padding: 48px 24px; }
 .ac-caixa { width: 100%; max-width: 380px; display: grid; gap: 12px; }
 .ac-caixa h2 { font-size: 22px; letter-spacing: -0.01em; margin: 0; }
@@ -290,3 +297,16 @@ table.ledger th:first-child, table.ledger td:first-child { padding-left: 20px; }
 .ac-carregando { color: var(--muted); }
 .ac-teste { display: grid; gap: 12px; }
 #erro-geral.ok { color: var(--credit); background: var(--ok-soft); }
+
+/* logo da Orprocon: a versão escura aparece no tema escuro */
+.logo-escuro { display: none; }
+:root[data-theme="dark"] .logo-claro { display: none; }
+:root[data-theme="dark"] .logo-escuro { display: inline-block; }
+.ac-logo { width: 300px; max-width: 80%; height: auto; }
+.ac-filete { width: 56px; height: 3px; border-radius: 2px; background: var(--brand-fill); margin: 22px auto 18px; }
+.marca .marca-sub { color: var(--brand); font-weight: 650; letter-spacing: .04em; }
+/* login: o modo de teste é a segunda opção (contorno) */
+#btn-teste { background: var(--surface); border: 1.5px solid var(--brand-fill); color: var(--brand); }
+#btn-teste:hover { background: var(--brand-soft); }
+.ac-marca img.ac-logo { border-radius: 0; box-shadow: none; }
+@media (max-width: 860px) { .ac-marca img.ac-logo { width: 200px; } .ac-filete { margin: 14px auto 8px; } }

@@ -1,4 +1,4 @@
-/* CÓPIA de Orprocon-Gestao-Financeira/js/auth.js (v0.16.3) — mantenha igual à de lá: é o que faz o login do Em Dia ser o mesmo da Gestão Financeira. */
+/* CÓPIA de Orprocon-Gestao-Financeira/js/auth.js (v0.18.1) — mantenha igual à de lá: é o que faz o login do Em Dia ser o mesmo da Gestão Financeira. */
 /*
  * auth.js — login, usuários e permissões.
  *
@@ -33,6 +33,7 @@
     { id: "conciliacao", nome: "Conciliação", detalhe: "Extrato × sistema e extrato × planilha" },
     { id: "mod-icms", nome: "Apuração de ICMS", detalhe: "" },
     { id: "mod-ibs-cbs", nome: "Auditor IBS/CBS", detalhe: "" },
+    { id: "mod-iss", nome: "ISS Tubarão", detalhe: "Meu ISS: ISS retido e retenções federais por XML" },
     { id: "mod-vencimentos", nome: "Painel de vencimentos", detalhe: "" },
     { id: "mod-em-dia", nome: "Em Dia", detalhe: "Fechamento do mês e diário dos setores" },
     { id: "mod-horas", nome: "Controle de horas", detalhe: "Folhas de presença dos funcionários dos clientes (DP)" }

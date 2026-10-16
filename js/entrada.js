@@ -28,7 +28,8 @@
   function desenhar() {
     document.querySelector(".app").outerHTML = '<div class="ac-tela">' +
       '<button type="button" class="btn-tema ac-tema" id="ac-tema" aria-label="Trocar tema">' + iconeTema() + "</button>" +
-      '<section class="ac-marca"><img src="icons/icon-192.png" alt="" width="72" height="72"><h1>Em Dia</h1><p class="ac-sub">Fechamento e diário do escritório</p><ul>' +
+      '<section class="ac-marca"><img class="ac-logo logo-claro" src="icons/orprocon-logo.png" alt="Orprocon Empresa Contábil"><img class="ac-logo logo-escuro" src="icons/orprocon-logo-escuro.png" alt="Orprocon Empresa Contábil">' +
+        '<div class="ac-filete"></div><h1>Em Dia</h1><p class="ac-sub">Fechamento e diário do escritório</p><ul>' +
       ["Fechamento do mês de cada cliente", "Diário de cada setor: Contábil, Fiscal e Pessoal", "“Onde parei” em cada tarefa", "Passagem de bastão quando alguém falta", "No celular e no computador, até sem internet"]
         .map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></section>" +
       '<section class="ac-cartao"><div class="ac-caixa">' +

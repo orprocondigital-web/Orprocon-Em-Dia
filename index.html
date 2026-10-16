@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Em Dia</title>
 <meta name="description" content="Fechamento do mês, diário de cada setor e passagem de bastão para escritórios de contabilidade.">
-<meta name="theme-color" content="#2445B0" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0D121C" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#49433A" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14120F" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/app.css?v=1.1.0">
-<link rel="stylesheet" href="css/em-dia.css?v=1.1.0">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/app.css?v=1.2.0">
+<link rel="stylesheet" href="css/em-dia.css?v=1.2.0">
 <script>
   // tema antes de desenhar a página, para não piscar claro
   (function () {
@@ -29,8 +29,8 @@
 <div class="app">
   <aside class="lateral" aria-label="Menu">
     <div class="marca">
-      <img src="icons/icon-192.png" alt="" width="32" height="32">
-      <div><strong>Em Dia</strong><span>Fechamento e diário</span></div>
+      <img src="icons/orprocon-simbolo.png" alt="Orprocon" width="32" height="32">
+      <div><strong>Em Dia</strong><span class="marca-sub">ORPROCON</span></div>
     </div>
     <nav id="abas" class="nav-lateral" aria-label="Telas"></nav>
     <div class="lateral-pe">
@@ -67,12 +67,12 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <input type="file" id="arquivo-backup" accept=".json,application/json" hidden>
 
-<script src="js/dados.js?v=1.1.0"></script>
-<script src="js/storage.js?v=1.1.0"></script>
-<script src="js/auth.js?v=1.1.0"></script>
-<script src="js/acesso.js?v=1.1.0"></script>
-<script src="js/app.js?v=1.1.0"></script>
-<script src="js/entrada.js?v=1.1.0"></script>
+<script src="js/dados.js?v=1.2.0"></script>
+<script src="js/storage.js?v=1.2.0"></script>
+<script src="js/auth.js?v=1.2.0"></script>
+<script src="js/acesso.js?v=1.2.0"></script>
+<script src="js/app.js?v=1.2.0"></script>
+<script src="js/entrada.js?v=1.2.0"></script>
 <script>
   if ("serviceWorker" in navigator && location.protocol !== "file:") {
     navigator.serviceWorker.register("sw.js").catch(function () {});

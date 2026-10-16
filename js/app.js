@@ -74,7 +74,7 @@ window.EmDiaApp = { iniciar: function (usuario, sairFn) {
   var filtros = { busca: "", pessoa: "", setor: "", pendentes: false, modo: "quadro", status: "",
     diario: { setor: null, pessoa: "", clienteId: "", de: "", ate: "", texto: "" }, bastaoPessoa: "", clientesBusca: "" };
 
-  var VERSAO_APP = "1.1.0";
+  var VERSAO_APP = "1.2.0";
   // ícones de traço (24x24), desenhados com currentColor
   var ICONE = {
     hoje: '<path d="M12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/><circle cx="12" cy="12" r="4"/>',

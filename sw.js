@@ -3,7 +3,7 @@
  * Guarda os arquivos do app (os dados ficam no localStorage do navegador, não aqui).
  * Mudou algum arquivo? Aumente VERSAO (e o ?v= do index.html), senão quem instalou continua com o antigo.
  */
-var VERSAO = "1.1.0";
+var VERSAO = "1.2.0";
 var CACHE = "em-dia-" + VERSAO;
 var CACHE_FONTES = "em-dia-fontes";
 var ARQUIVOS = [
@@ -11,7 +11,7 @@ var ARQUIVOS = [
   "css/app.css?v=" + VERSAO, "css/em-dia.css?v=" + VERSAO,
   "js/dados.js?v=" + VERSAO, "js/storage.js?v=" + VERSAO, "js/auth.js?v=" + VERSAO, "js/acesso.js?v=" + VERSAO,
   "js/app.js?v=" + VERSAO, "js/entrada.js?v=" + VERSAO,
-  "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png"
+  "icons/icon-192.png", "icons/orprocon-logo.png", "icons/orprocon-logo-escuro.png", "icons/orprocon-simbolo.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png", "icons/favicon-32.png"
 ];
 
 self.addEventListener("install", function (ev) {
